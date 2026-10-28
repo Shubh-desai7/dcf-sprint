@@ -28,3 +28,7 @@ No build step and no dependencies. Plain HTML/CSS/JS.
 - Teach only what was covered in class (FCFE DCF, terminal value, NPV, IRR, EV, scenarios). Other methods stay in the brief "Extras" sprint.
 - The answer key follows the professor's completed Excel, including offline packaging at 1.0% in FY28 (the case HTML says 1.2%).
 - If you change a case's numbers, re-check that values stay sensible (positive equity value, r > g) and that the asks give interesting NPV/IRR outcomes.
+
+## Deploy workflow
+
+This folder is a git checkout of `github.com/Shubh-desai7/dcf-sprint` (branch `main`), which Vercel deploys automatically. After every change, commit and push to `main` without asking (the user asked for auto-push).
