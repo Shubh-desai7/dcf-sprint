@@ -1,5 +1,5 @@
 /* DCF Sprint — all pages, widgets and the exam simulator. Model maths lives in model.js. */
-const { run, CASES, YEARS, irr, hist } = window.DCF;
+const { run, CASES, YEARS, irr } = window.DCF;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? '' : (Math.abs(v) < 0.005 && d <= 2 ? 0 : v).toFixed(d);
@@ -210,64 +210,16 @@ const QS = [
   ['IRR if the deal happens at the founder’s ask (in %, e.g. 18.5)', m => m.v.irr, '=IRR(−ask, FCFE27, FCFE28, FCFE29, FCFE30 + TV)', 'pct']
 ];
 
-/* ---------------- Case guidelines (same sections as the professor's case HTML) ---------------- */
-const INVESTOR = { coolnomad: ['Arjun Varma', 'Meridian Growth Partners'], practice: ['Nisha Kapoor', 'Summit Ridge Capital'], test: ['Rohan Mehta', 'Northstar Ventures'] };
-const n1 = x => x < 0 ? `(${Math.abs(x).toFixed(1)})` : x.toFixed(1);
-function caseDoc(c) {
-  const h = hist(c), Y3 = ['FY24', 'FY25', 'FY26'], [who, fund] = INVESTOR[c.id];
-  const rev26 = h.con[8][2], off = h.off, dc = h.dc, k = h.con;
-  const tr = (l, a, o = {}) => `<tr${o.b ? ' class="sub"' : ''}><td>${l}</td>${a.map(x => `<td>${o.p ? (x < 0 ? `(${Math.abs(x * 100).toFixed(1)}%)` : (x * 100).toFixed(1) + '%') : o.neg ? n1(-x) : n1(x)}</td>`).join('')}</tr>`;
-  const t3 = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${title}</th>${Y3.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  const ratio = (a, b) => a.map((x, i) => x / b[i]);
-  const rowP = (l, a) => `<tr><td>${l}</td>${a.map(x => `<td>${pct(x, 1)}</td>`).join('')}</tr>`;
-  const t4 = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${title}</th>${YEARS.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  const grows = (l, base, g) => `<tr><td>${l}, FY26 base ₹${base} Cr</td>${g.map(x => `<td>+${(x * 100).toFixed(0)}%</td>`).join('')}</tr>`;
-  const sec = (n, t) => `<div class="docsec"><span class="mlabel">Case / ${n}</span><h3>${t}</h3></div>`;
-  return `<div class="doc">
-  ${sec('1. About ' + c.name, 'Company and verticals')}
-  <p>${c.name} is an Indian ${c.biz.toLowerCase()} brand. It sells through two verticals it owns outright: its <b>own retail stores</b> and its <b>D2C website and app</b>. Each vertical sells <b>bags</b> and <b>accessories</b>. FY26 closed at <b>₹${n1(rev26)} crore</b> of revenue and <b>₹${n1(k[16][2])} crore</b> of EBITDA.</p>
-  <div class="grid3"><div class="stat"><b>₹${n1(rev26)} Cr</b><span>FY26 revenue</span></div><div class="stat"><b>₹${n1(off[8][2])} / ${n1(dc[8][2])} Cr</b><span>Offline / D2C</span></div><div class="stat"><b>₹${n1(k[16][2])} Cr</b><span>FY26 EBITDA</span></div></div>
-  ${sec('2. The mandate', 'What the investor wants')}
-  <div class="mail"><div class="mail-h"><span class="mlabel">From</span> ${who}, Managing Partner, ${fund}<br><span class="mlabel">Subject</span> ${c.name}: how I want this one valued</div>
-  <p>Team,</p>
-  <p><b>Discount rate.</b> Our required return is <b>${pct(c.r, 0)}</b> a year. Terminal growth is <b>${pct(c.g, 0)}</b>. Forecast <b>FY27 to FY30</b> and value the company as at <b>31 March 2026</b>. Four years, no more.</p>
-  <p><b>Model the two verticals separately</b>, and split each into bags and accessories. Revenue less cost of goods sold gives gross margin. Take off packaging and payment gateway charges (and shipping in D2C) to get <b>CM1</b>. Take off performance marketing to get <b>CM2</b>. In the stores, rent and staff sit below CM2 and give the store contribution.</p>
-  <p><b>Rent and staff are fixed costs.</b> Do not run them as a percentage of revenue: grow the FY26 rupee amount year on year. Common costs (salaries, brand marketing, technology, other G&amp;A) each have their own growth rate.</p>
-  <p><b>Working capital</b> is held at <b>${pct(c.wcPct, 0)} of revenue</b>; treat the increase as cash out. FY26 working capital was ₹${c.wc0} crore.</p>
-  <p><b>One lump of capex:</b> ${c.asset} costing <b>₹${c.capex} crore</b>, all in <b>${YEARS[c.capexYear]}</b>, depreciated over <b>${c.life} years</b> from that year. Depreciation on existing assets continues at ₹${c.dep0} crore a year.</p>
-  <p><b>Debt.</b> The company carries <b>₹${c.debt} crore</b> of debt at <b>${pct(c.intRate, 0)}</b>, held constant. Tax at ${pct(c.tax, 0)} on profit before tax, and no tax in a loss year. Cash on the balance sheet is ₹${c.cash} crore.</p>
-  <p><b>The ask.</b> The founder wants a valuation of <b>₹${c.ask} crore</b>. Value the equity with FCFE, then give me the enterprise value, the NPV against the ask and the IRR if we pay the ask. Three cases: upside <b>1.2×</b> and downside <b>0.8×</b> the base.</p>
-  <p>${who}</p></div>
-  ${sec('3. Historicals', 'Three years of actuals (₹ crore)')}
-  ${t3('Offline retail stores', tr('Bags revenue', off[6]) + tr('Accessories revenue', off[7]) + tr('Total revenue', off[8], { b: 1 }) + tr('Cost of goods sold', off[9], { neg: 1 }) + tr('Gross margin', off[10], { b: 1 }) + tr('Gross margin %', ratio(off[10], off[8]), { p: 1 }) + tr('Packaging', off[11], { neg: 1 }) + tr('Payment gateway charges', off[12], { neg: 1 }) + tr('CM1', off[13], { b: 1 }) + tr('Performance marketing', off[14], { neg: 1 }) + tr('CM2', off[15], { b: 1 }) + tr('Store rent', off[16], { neg: 1 }) + tr('Store staff', off[17], { neg: 1 }) + tr('Store contribution', off[18], { b: 1 }))}
-  ${t3('D2C website and app', tr('Bags revenue', dc[6]) + tr('Accessories revenue', dc[7]) + tr('Total revenue', dc[8], { b: 1 }) + tr('Cost of goods sold', dc[9], { neg: 1 }) + tr('Gross margin', dc[10], { b: 1 }) + tr('Gross margin %', ratio(dc[10], dc[8]), { p: 1 }) + tr('Packaging', dc[11], { neg: 1 }) + tr('Payment gateway charges', dc[12], { neg: 1 }) + tr('Shipping', dc[13], { neg: 1 }) + tr('CM1', dc[14], { b: 1 }) + tr('Performance marketing', dc[15], { neg: 1 }) + tr('CM2, the D2C contribution', dc[16], { b: 1 }))}
-  ${t3('Consolidated', tr('Total revenue', k[8], { b: 1 }) + tr('Total vertical contribution', k[11], { b: 1 }) + tr('Head office salaries', k[12], { neg: 1 }) + tr('Brand marketing', k[13], { neg: 1 }) + tr('Technology and platform', k[14], { neg: 1 }) + tr('Other general and administrative', k[15], { neg: 1 }) + tr('EBITDA', k[16], { b: 1 }) + tr('Depreciation', k[17], { neg: 1 }) + tr('Profit before tax', k[18], { b: 1 }) + tr('Tax', k[21], { neg: 1 }) + tr('Profit after tax', k[22], { b: 1 }))}
-  <div class="tablewrap"><table><thead><tr><th>Balance sheet at 31 March 2026</th><th>₹ crore</th></tr></thead><tbody>
-   <tr><td>Net working capital</td><td>${n1(c.wc0)}</td></tr><tr><td>Working capital as % of FY26 revenue</td><td>${pct(c.wc0 / rev26, 1)}</td></tr>
-   <tr><td>Cash</td><td>${n1(c.cash)}</td></tr><tr><td>Debt</td><td>${n1(c.debt)} at ${pct(c.intRate, 0)}</td></tr></tbody></table></div>
-  ${sec('4. Assumptions', 'The assumptions to model with')}
-  ${t4('Sheet one: offline retail stores', rowP('Bags revenue growth', c.off.gB) + rowP('Accessories revenue growth', c.off.gA) + rowP('Gross margin', c.off.gm) + rowP('Packaging', c.off.pack) + rowP('Payment gateway charges', c.off.pg) + rowP('Performance marketing', c.off.pm) + grows('Store rent', c.off.rent0, c.off.gRent) + grows('Store staff', c.off.staff0, c.off.gStaff))}
-  ${t4('Sheet two: D2C website and app', rowP('Bags revenue growth', c.d2c.gB) + rowP('Accessories revenue growth', c.d2c.gA) + rowP('Gross margin', c.d2c.gm) + rowP('Packaging', c.d2c.pack) + rowP('Payment gateway charges', c.d2c.pg) + rowP('Shipping', c.d2c.ship) + rowP('Performance marketing', c.d2c.pm))}
-  ${t4('Common costs, line by line', grows('Head office salaries', c.common.sal0, c.common.gSal) + grows('Brand marketing', c.common.brand0, c.common.gBrand) + grows('Technology and platform', c.common.tech0, c.common.gTech) + grows('Other general and administrative', c.common.oth0, c.common.gOth))}
-  <div class="tablewrap"><table><thead><tr><th>Corporate</th><th>Value</th></tr></thead><tbody>
-   <tr><td>Depreciation on existing assets p.a. (₹ cr)</td><td>${c.dep0}</td></tr>
-   <tr><td>${c.asset[0].toUpperCase() + c.asset.slice(1)}, total cost (₹ cr)</td><td>${c.capex}</td></tr>
-   <tr><td>Year of purchase</td><td>${YEARS[c.capexYear]}</td></tr><tr><td>Life (years)</td><td>${c.life}</td></tr>
-   <tr><td>Additional depreciation (${YEARS[c.capexYear]} onwards)</td><td>${fmt(c.capex / c.life)}</td></tr>
-   <tr><td>Working capital (% of revenue)</td><td>${pct(c.wcPct, 0)}</td></tr><tr><td>Working capital at 31 Mar 2026 (₹ cr)</td><td>${c.wc0}</td></tr>
-   <tr><td>Tax rate</td><td>${pct(c.tax, 0)}</td></tr><tr><td>Debt as on 31/3/2026 (₹ cr)</td><td>${c.debt}</td></tr><tr><td>Interest cost (%)</td><td>${pct(c.intRate, 0)}</td></tr>
-  </tbody></table></div></div>`;
-}
 /* The exam kit: same two files the exam hands out, plus the answer key once you are allowed to see it. */
 function kit(c, showKey) {
-  const f = (k, label) => `<a class="btn ${k === 'blank-template' ? 'primary' : ''}" href="files/${c.id}-${k}.xlsx" download="${c.name} - ${label}.xlsx">↓ ${label} (.xlsx)</a>`;
+  const f = (k, label) => `<a class="btn" href="files/${c.id}-${k}.xlsx" download="${c.name} - ${label}.xlsx">↓ ${label} (.xlsx)</a>`;
   return `<div class="card"><span class="mlabel">Your exam kit</span>
   <ol class="tight"><li><b>Download the blank template.</b> It is the class file with ${c.name}’s historicals and Assumptions sheet filled in. Every forecast cell (columns F–I) and the whole DCF (FCFE) sheet are blank, exactly like the exam.</li>
   <li><b>Open it</b> in Excel, or in Google Sheets (File → Import → Upload).</li>
-  <li><b>Read the case guidelines</b> below. Type the discount rate, terminal growth, capex and founder’s ask where the case gives them (yellow cells on the DCF sheet).</li>
+  <li><b>Read the case guidelines</b> (opens in a new tab, in your professor’s format). Type the discount rate, terminal growth, capex and founder’s ask where the case gives them (yellow cells on the DCF sheet).</li>
   <li><b>Fill every blank with formulas</b>, then answer the 25 questions from your model.</li>
   ${showKey ? '<li><b>Compare</b> with the answer key: the same file with every formula filled in.</li>' : ''}</ol>
-  <div class="toolbar">${f('blank-template', 'Blank template')}${showKey ? f('answer-key', 'Answer key') : ''}<button onclick="print()">Print case guidelines</button></div></div>`;
+  <div class="toolbar"><a class="btn primary" href="files/${c.id}-case.html" target="_blank" rel="noopener">Open case guidelines ↗</a>${f('blank-template', 'Blank template')}${showKey ? f('answer-key', 'Answer key') : ''}</div></div>`;
 }
 function fullModel(m, el) {
   el.innerHTML = `<h3>Offline retail</h3><div id="fm-off"></div><h3>D2C</h3><div id="fm-d2c"></div><h3>Consolidated</h3><div id="fm-con"></div><h3>DCF (FCFE)</h3><div id="fm-dcf"></div>
@@ -634,8 +586,6 @@ const PM = run(CASES.practice), TM = run(CASES.test);
 R.practice = () => `<h1>Practice test · ${PM.c.name}</h1>
   <p class="lead">Exactly like the exam: a blank Excel template, a case document, 50 marks of questions. Hints are on and answers are saved in this browser.</p>
   ${kit(PM.c, true)}
-  <h2>Case guidelines · ${PM.c.name}</h2>
-  ${caseDoc(PM.c)}
   <h2>Questions (50 marks)</h2>
   <div class="card" id="pq">${qRows('practice', PM, store.get('pans', {}))}</div>
   <div class="toolbar"><button id="p-score" class="primary">Score me</button><button id="p-reset">Clear answers</button><button id="p-key">Show full model (answer key)</button><span id="p-res" class="pill"></span></div>
@@ -664,8 +614,6 @@ R.test = () => {
       <span class="timer" id="t-clock">${graded ? `Score: ${st.score} / 50` : ''}</span>
       <span>${graded ? '<button id="t-again">Retake</button>' : '<button class="primary" id="t-sub">Submit and grade</button>'}</span></div>
     ${kit(m.c, graded)}
-    <h2>Case guidelines · ${m.c.name}</h2>
-    ${caseDoc(m.c)}
     <h2>Answer sheet (50 marks)</h2>
     <div class="card" id="tq">${qRows(graded ? 'review' : 'test', m, st.ans || {})}</div>
     ${graded ? '<div class="toolbar"><button id="t-key">Show full model (answer key)</button></div><div id="t-model"></div>' : ''}${footer('test')}`;

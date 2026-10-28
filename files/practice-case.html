@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrekLite - Valuation Case</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#F3EDE0; --surface:#FDFBF5; --ink:#1F2325; --muted:#6E6455;
+  --gold:#B2833F; --gold-soft:#C79A5B; --sand:#EAE0CB; --line:#DED2B9;
+  --pos:#3D7355; --neg:#A8492F; --fc:#F0E8D6;
+  --metal:linear-gradient(100deg,#8C6427 0%,#C79A5B 30%,#E8D4AE 48%,#C79A5B 68%,#8C6427 100%);
+  --serif:"Cormorant Garamond","Iowan Old Style",Georgia,serif;
+  --sans:"Jost","Avenir Next","Segoe UI",system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;min-height:100%}
+img{max-width:100%}
+.app{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;background:var(--surface);border-right:1px solid var(--line);padding:26px 20px;display:flex;flex-direction:column;gap:22px;overflow:auto}
+.logo-wrap{background:#fff;border-radius:6px;padding:8px;border:1px solid var(--line)}
+.logo-wrap img{display:block;width:100%}
+.room-meta{font-size:13px;color:var(--muted);line-height:1.5}
+.room-meta strong{color:var(--ink);font-weight:500}
+nav ol{list-style:none;margin:0;padding:0;counter-reset:f}
+nav li{counter-increment:f}
+nav button{all:unset;cursor:pointer;display:grid;grid-template-columns:28px 1fr;align-items:baseline;width:100%;padding:9px 10px;border-radius:4px;color:var(--muted);font-size:15px}
+nav button::before{content:counter(f) ".";font-family:var(--serif);font-size:18px;font-weight:600}
+nav button small{grid-column:2;font-size:12px;color:var(--muted);opacity:.85}
+nav button:hover{background:var(--sand);color:var(--ink)}
+nav button[aria-current="true"]{background:var(--sand);color:var(--ink)}
+nav button[aria-current="true"]::before{background:var(--metal);-webkit-background-clip:text;background-clip:text;color:transparent}
+nav button:focus-visible,input:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.aside-foot{margin-top:auto;font-size:12px;color:var(--muted)}
+main{padding:42px clamp(18px,4vw,56px) 80px;min-width:0}
+section{display:none;max-width:1140px}
+section.on{display:block}
+.crumb{font-size:13px;color:var(--muted);margin:0 0 6px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(34px,4.6vw,52px);line-height:1.05;margin:0 0 10px;letter-spacing:-.01em}
+h2{font-family:var(--serif);font-weight:600;font-size:26px;margin:42px 0 12px;line-height:1.15}
+h3{font-size:15px;font-weight:600;margin:0 0 6px}
+.lede{font-size:18px;color:var(--muted);max-width:66ch;margin:0 0 26px}
+.rule{height:2px;background:var(--metal);border:0;width:90px;margin:0 0 26px}
+p{max-width:72ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:8px 0}
+.facts div{padding:18px 18px 18px 0}
+.facts dt{font-size:13px;color:var(--muted)}
+.facts dd{margin:2px 0 0;font-family:var(--serif);font-size:28px;font-weight:600;line-height:1.1}
+.two{display:grid;grid-template-columns:1.25fr 1fr;gap:40px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:20px 22px}
+.timeline{list-style:none;padding:0;margin:0;border-left:2px solid var(--line)}
+.timeline li{position:relative;padding:0 0 18px 22px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--gold-soft)}
+.timeline b{font-weight:600;display:block}
+.timeline span{color:var(--muted);font-size:15px}
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:14.5px;font-variant-numeric:tabular-nums lining-nums}
+th,td{padding:10px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+thead th{font-weight:500;color:var(--muted);font-size:13px;vertical-align:bottom}
+thead th .tag{display:block;font-size:11px;color:var(--gold);font-weight:500}
+tr.sub td{color:var(--muted);font-size:13.5px}
+tr.sub td:first-child{padding-left:28px}
+tr.key td{font-weight:600}
+tr.mar td{font-weight:600;background:var(--sand)}
+tr.mar td:first-child{background:var(--sand)}
+tr.total td{font-weight:600;border-top:2px solid var(--ink)}
+tr.head td{font-weight:600;background:var(--fc);font-size:13px;color:var(--muted);text-transform:none}
+tr.head td:first-child{background:var(--fc)}
+tbody tr:last-child td{border-bottom:0}
+.neg{color:var(--neg)} .pos{color:var(--pos)}
+.blank{background:repeating-linear-gradient(45deg,transparent,transparent 6px,var(--sand) 6px,var(--sand) 7px);min-width:74px}
+.note{font-size:13px;color:var(--muted);max-width:80ch}
+.notes{margin-top:50px;padding-top:18px;border-top:1px solid var(--line)}
+.notes h3{font-size:13px;color:var(--muted);font-weight:500;margin-bottom:8px}
+.notes p,.notes li{font-size:12.5px;color:var(--muted);max-width:92ch;margin:0 0 6px}
+.notes ul{padding-left:18px;margin:0}
+.email{background:var(--surface);border:1px solid var(--line);border-radius:6px;max-width:84ch}
+.email .head{border-bottom:1px solid var(--line);padding:18px 26px;display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}
+.email .head dt{color:var(--muted)}
+.email .head dd{margin:0}
+.email .body{padding:24px 26px}
+.email .body p{max-width:none;margin:0 0 14px}
+.email .body p:last-child{margin-bottom:0}
+.email .sig{color:var(--muted);font-size:14px}
+.steps{list-style:none;counter-reset:s;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:0 0 16px 40px;max-width:80ch}
+.steps li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border-radius:50%;background:var(--sand);color:var(--gold);font-size:13px;font-weight:600;display:grid;place-items:center}
+.steps b{display:block}
+.steps span{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:14px;margin:14px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.card h3{margin-bottom:4px}
+.card p{font-size:14.5px;color:var(--muted);margin:0;max-width:none}
+.formula{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:13.5px;background:var(--sand);border-radius:4px;padding:2px 7px;white-space:nowrap}
+.lock{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:30px 28px;max-width:52ch;text-align:center;margin:20px auto}
+.lock .ico{width:52px;height:52px;border-radius:50%;background:var(--sand);display:grid;place-items:center;margin:0 auto 14px}
+.lock p{color:var(--muted);font-size:14.5px;margin:0 auto 18px;max-width:42ch}
+.lock form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lock input{font-family:var(--sans);font-size:15px;padding:9px 12px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);min-width:200px}
+.lock button{font-family:var(--sans);font-size:15px;padding:9px 20px;border:0;border-radius:5px;background:var(--ink);color:var(--surface);cursor:pointer}
+.lock .err{color:var(--neg);font-size:13.5px;margin:12px 0 0;min-height:18px}
+.hidden{display:none}
+.scen{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin:14px 0}
+.scen div{border:1px solid var(--line);border-radius:6px;padding:18px 20px;background:var(--surface)}
+.scen .lab{font-size:13px;color:var(--muted)}
+.scen .mult{font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.1}
+.scen .d{font-size:14px;color:var(--muted);margin-top:4px}
+.scen .base{border-color:var(--gold-soft);background:var(--fc)}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  aside{position:sticky;top:0;height:auto;z-index:5;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px));flex-direction:row;align-items:center;gap:14px;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
+  .logo-wrap{width:112px;flex:none;padding:3px}
+  .room-meta,.aside-foot{display:none}
+  nav ol{display:flex;gap:4px}
+  nav button{grid-template-columns:auto auto;gap:4px;white-space:nowrap;padding:8px 10px;font-size:14px}
+  nav button small{display:none}
+  main{padding-top:26px}
+  .two{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){section.on{animation:in .3s ease}@keyframes in{from{opacity:0}to{opacity:1}}}
+.wordmark{font-family:var(--serif);font-weight:700;font-size:30px;text-align:center;letter-spacing:.02em;padding:14px 6px;color:var(--ink);border-bottom:2px solid var(--gold-soft)}
+@media (max-width:900px){.wordmark{font-size:20px;padding:4px}}
+</style>
+
+</head>
+<body>
+<div class="app">
+<aside>
+  <div class="logo-wrap"><div class="wordmark">TrekLite</div></div>
+  <nav aria-label="Case sections"><ol>
+    <li><button data-s="about" aria-current="true">About TrekLite<small>Company and verticals</small></button></li>
+    <li><button data-s="mandate">The mandate<small>Investor&#39;s email</small></button></li>
+    <li><button data-s="hist">Historicals<small>FY24-FY26 actuals</small></button></li>
+    <li><button data-s="assum">Assumptions<small>Offline, D2C and common</small></button></li>
+  </ol></nav>
+  <div class="aside-foot"><div class="room-meta" style="margin-bottom:10px"><strong>Valuation case study</strong><br>TrekLite Outdoor Gear Pvt. Ltd.<br>All figures in ₹ crore unless stated</div>Practice material for the DCF exam. Figures are illustrative.</div>
+</aside>
+
+<main>
+
+<section id="about" class="on">
+  <p class="crumb">Case / 1. About TrekLite</p>
+  <h1>Packs built for the trail, sold two ways</h1>
+  <hr class="rule">
+  <p class="lede">TrekLite is an Indian outdoor gear brand founded in April 2023. It sells hiking backpacks and outdoor accessories through eighteen of its own stores and its own website and app. FY26 closed at ₹120.0 crore of revenue and ₹14.5 crore of EBITDA.</p>
+  <dl class="facts">
+    <div><dt>FY26 revenue</dt><dd>₹120.0 Cr</dd></div>
+    <div><dt>Offline stores</dt><dd>₹50.0 Cr</dd></div>
+    <div><dt>D2C</dt><dd>₹70.0 Cr</dd></div>
+    <div><dt>FY26 EBITDA</dt><dd>₹14.5 Cr</dd></div>
+    <div><dt>Stores open</dt><dd>18</dd></div>
+  </dl>
+  <div class="two">
+    <div>
+      <h2>The business</h2>
+      <p>TrekLite designs technical hiking backpacks, from 20-litre day packs to 65-litre trekking rucksacks, priced between ₹2,499 and ₹8,999, alongside a growing accessories line of hydration bladders, rain covers, trekking poles and dry bags. Bags are about 75% of revenue and accessories the rest, and accessories are growing faster.</p>
+      <h2>Two verticals</h2>
+      <p><b>Offline retail stores.</b> Eighteen stores that the company owns and runs, in hill-station high streets and metro malls. Walk-in customers cost nothing to acquire, so performance marketing is light. Against that, every store pays rent and staff whether it sells or not.</p>
+      <p><b>D2C website and app.</b> It carries no rent, but it pays for every order it wins through performance marketing, and it pays to ship, pack and collect the money.</p>
+      <p>There is no third vertical. TrekLite does not sell on marketplaces, does not distribute through multi-brand outlets and does not franchise.</p>
+      <div class="tbl-wrap"><table class=""><thead><tr><th>Revenue, ₹ crore</th><th>FY24</th><th>FY25</th><th>FY26</th></tr></thead><tbody><tr class="key"><td><b>Offline retail stores</b></td><td>9.3</td><td>24.5</td><td>50.0</td></tr><tr class="sub"><td>Bags</td><td>7.7</td><td>20.0</td><td>40.0</td></tr><tr class="sub"><td>Accessories</td><td>1.6</td><td>4.5</td><td>10.0</td></tr><tr class="key"><td><b>D2C website and app</b></td><td>12.7</td><td>34.1</td><td>70.0</td></tr><tr class="sub"><td>Bags</td><td>9.6</td><td>25.0</td><td>50.0</td></tr><tr class="sub"><td>Accessories</td><td>3.1</td><td>9.1</td><td>20.0</td></tr><tr class="total"><td>Total revenue</td><td>22.0</td><td>58.6</td><td>120.0</td></tr><tr class="sub"><td>of which bags</td><td>17.3</td><td>45.0</td><td>90.0</td></tr><tr class="sub"><td>of which accessories</td><td>4.7</td><td>13.6</td><td>30.0</td></tr></tbody></table></div>
+    </div>
+    <div>
+      <h2>Founder</h2>
+      <div class="panel">
+        <h3>Meera Iyer</h3>
+        <div class="note" style="margin-bottom:12px">Founder and Chief Executive Officer</div>
+        <p style="margin:0">Meera spent eight years in sourcing and product at a global sportswear company before starting TrekLite in April 2023. She leads product, sourcing and capital strategy.</p>
+      </div>
+      <h2>Company details</h2>
+      <div class="panel" style="font-size:15px">
+        <p style="margin:0 0 6px"><span class="note">Legal entity</span><br>TrekLite Outdoor Gear Private Limited</p>
+        <p style="margin:0 0 6px"><span class="note">Founded</span><br>April 2023 (FY24)</p>
+        <p style="margin:0 0 6px"><span class="note">Category</span><br>Hiking backpacks and outdoor accessories</p>
+        <p style="margin:0 0 6px"><span class="note">Funding</span><br>Equity, plus a ₹30 crore term loan drawn on 31 March 2026 at 12%</p>
+        <p style="margin:0"><span class="note">Financial year</span><br>April to March</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mandate">
+  <p class="crumb">Case / 2. The mandate</p>
+  <h1>What the investor wants</h1>
+  <hr class="rule">
+  <div class="email">
+    <dl class="head">
+      <dt>From</dt><dd>Nisha Kapoor, Managing Partner, Summit Ridge Capital</dd>
+      <dt>To</dt><dd>Investment team</dd>
+      <dt>Subject</dt><dd>TrekLite - how I want this one valued</dd>
+    </dl>
+    <div class="body">
+<p>Team,</p>
+<p>TrekLite is a three-year-old Indian brand: hiking backpacks and outdoor accessories. It sells through two verticals it owns outright - eighteen <b>retail stores</b> and its <b>D2C website and app</b>. No marketplaces, no distributors, no franchise. FY26 closed at &#8377;120.0 crore of revenue, &#8377;50.0 crore offline and &#8377;70.0 crore D2C, with &#8377;14.5 crore of EBITDA. Founder Meera Iyer is raising equity and wants a valuation of <b>&#8377;170 crore</b>.</p>
+<p><b>Discount rate.</b> Our required return is <b>21%</b> a year. Run the sensitivity at <b>19%, 21% and 23%</b>, against terminal growth of <b>4%, 5% and 6%</b>. Five percent is the base.</p>
+<p><b>Forecast FY27 to FY30</b> and value the company as at 31 March 2026. Four years, no more.</p>
+<p><b>Model the two verticals separately, and split each into bags and accessories.</b> They behave differently. Assumptions for each are in the pack.</p>
+<p><b>The margin stack, in both verticals.</b> Revenue less cost of goods sold gives gross margin. Take off packaging and payment gateway charges - and shipping in D2C, which the stores do not carry - and that gives <b>CM1</b>. Take off performance marketing and that gives <b>CM2</b>. In the stores, rent and staff sit <b>below CM2</b>, and taking them off gives the <b>store contribution</b>.</p>
+<p><b>Rent and staff are fixed costs.</b> Do not run them as a percentage of revenue - grow the FY26 rupee amount year on year. They grow slower than revenue, which is what makes the store margin expand.</p>
+<p><b>Common costs, line by line.</b> Salaries, brand marketing, technology and administration each have their own growth rate in the pack. No single blanket rate for the head office.</p>
+<p><b>Working capital moves with revenue, one for one.</b> Hold it at 15% of revenue and treat the increase as cash out. Working capital at 31 March 2026 was &#8377;18 crore.</p>
+<p><b>One lump of capex.</b> Ten bag-stitching machines at ₹0.5 crore each, &#8377;5 crore in total, all in FY29, depreciated over five years. Depreciation on the existing fit-outs continues at &#8377;2.5 crore a year.</p>
+<p><b>Debt.</b> The company carries a &#8377;30 crore term loan at 12% a year. Hold it constant across the forecast. EBITDA less depreciation is EBIT; less interest is profit before tax. Tax at 25%, and no tax in a loss year. Cash on the balance sheet is &#8377;15 crore.</p>
+<p><b>Value the equity with free cash flow to equity.</b> Then give me the <b>enterprise value</b>, the <b>NPV</b> against the founder's ask of &#8377;170 crore, and the <b>IRR</b> we earn if we pay the ask.</p>
+<p><b>Three cases.</b> Your cash flow model is the <b>base</b>. The <b>upside</b> is 1.2 times it and the <b>downside</b> is 0.8 times it.</p>
+<p>Come back with the equity valuation of the company using the discounted cash flow.</p>
+<p class="sig">Nisha Kapoor<br>Managing Partner, Summit Ridge Capital<br>Sent Monday, 26 October 2026, 19:10</p>
+</div>
+  </div>
+</section>
+
+<section id="hist">
+  <p class="crumb">Case / 3. Historicals</p>
+  <h1>Three years of actuals</h1>
+  <hr class="rule">
+  <h2>Vertical one: offline retail stores</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Offline retail stores, ₹ crore</th><th>FY24</th><th>FY25</th><th>FY26</th></tr></thead><tbody><tr class=""><td>Bags revenue</td><td>7.7</td><td>20.0</td><td>40.0</td></tr><tr class=""><td>Accessories revenue</td><td>1.6</td><td>4.5</td><td>10.0</td></tr><tr class="key"><td>Total revenue</td><td>9.3</td><td>24.5</td><td>50.0</td></tr><tr class=""><td>Cost of goods sold</td><td>(4.9)</td><td>(12.3)</td><td>(24.0)</td></tr><tr class="mar"><td>Gross margin</td><td>4.4</td><td>12.2</td><td>26.0</td></tr><tr class="sub"><td>Gross margin %</td><td>47.3%</td><td>49.8%</td><td>52.0%</td></tr><tr class=""><td>Packaging</td><td>(0.1)</td><td>(0.3)</td><td>(0.5)</td></tr><tr class=""><td>Payment gateway charges</td><td>(0.1)</td><td>(0.2)</td><td>(0.4)</td></tr><tr class="mar"><td>CM1</td><td>4.2</td><td>11.7</td><td>25.1</td></tr><tr class="sub"><td>CM1 %</td><td>45.2%</td><td>47.8%</td><td>50.2%</td></tr><tr class=""><td>Performance marketing</td><td>(0.8)</td><td>(1.8)</td><td>(3.0)</td></tr><tr class="mar"><td>CM2</td><td>3.4</td><td>9.9</td><td>22.1</td></tr><tr class="sub"><td>CM2 %</td><td>36.6%</td><td>40.4%</td><td>44.2%</td></tr><tr class=""><td>Store rent</td><td>(2.2)</td><td>(4.4)</td><td>(7.0)</td></tr><tr class=""><td>Store staff</td><td>(1.3)</td><td>(2.9)</td><td>(5.0)</td></tr><tr class="key"><td>Store contribution</td><td>(0.1)</td><td>2.6</td><td>10.1</td></tr><tr class="sub"><td>Store contribution %</td><td>(1.1%)</td><td>10.6%</td><td>20.2%</td></tr></tbody></table></div>
+  <h2>Vertical two: D2C website and app</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>D2C website and app, ₹ crore</th><th>FY24</th><th>FY25</th><th>FY26</th></tr></thead><tbody><tr class=""><td>Bags revenue</td><td>9.6</td><td>25.0</td><td>50.0</td></tr><tr class=""><td>Accessories revenue</td><td>3.1</td><td>9.1</td><td>20.0</td></tr><tr class="key"><td>Total revenue</td><td>12.7</td><td>34.1</td><td>70.0</td></tr><tr class=""><td>Cost of goods sold</td><td>(6.4)</td><td>(16.0)</td><td>(31.5)</td></tr><tr class="mar"><td>Gross margin</td><td>6.3</td><td>18.1</td><td>38.5</td></tr><tr class="sub"><td>Gross margin %</td><td>49.6%</td><td>53.1%</td><td>55.0%</td></tr><tr class=""><td>Packaging</td><td>(0.2)</td><td>(0.6)</td><td>(1.1)</td></tr><tr class=""><td>Payment gateway charges</td><td>(0.2)</td><td>(0.6)</td><td>(1.1)</td></tr><tr class=""><td>Shipping</td><td>(0.5)</td><td>(1.2)</td><td>(2.1)</td></tr><tr class="mar"><td>CM1</td><td>5.4</td><td>15.7</td><td>34.2</td></tr><tr class="sub"><td>CM1 %</td><td>42.5%</td><td>46.0%</td><td>48.9%</td></tr><tr class=""><td>Performance marketing</td><td>(5.2)</td><td>(11.7)</td><td>(19.6)</td></tr><tr class="key"><td>CM2, and the D2C contribution</td><td>0.2</td><td>4.0</td><td>14.6</td></tr><tr class="sub"><td>CM2 %</td><td>1.6%</td><td>11.7%</td><td>20.9%</td></tr></tbody></table></div>
+  <h2>Consolidated</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Consolidated, ₹ crore</th><th>FY24</th><th>FY25</th><th>FY26</th></tr></thead><tbody><tr class="key"><td>Total revenue</td><td>22.0</td><td>58.6</td><td>120.0</td></tr><tr class=""><td>Store contribution, offline</td><td>(0.1)</td><td>2.6</td><td>10.1</td></tr><tr class=""><td>CM2, D2C</td><td>0.2</td><td>4.0</td><td>14.6</td></tr><tr class="mar"><td>Total vertical contribution</td><td>0.1</td><td>6.6</td><td>24.7</td></tr><tr class="sub"><td>as % of revenue</td><td>0.5%</td><td>11.3%</td><td>20.6%</td></tr><tr class="head"><td><b>Common costs</b></td><td></td><td></td><td></td></tr><tr class="sub"><td>Head office salaries</td><td>(2.2)</td><td>(3.3)</td><td>(5.0)</td></tr><tr class="sub"><td>Brand marketing</td><td>(1.2)</td><td>(1.9)</td><td>(3.0)</td></tr><tr class="sub"><td>Technology and platform</td><td>(0.4)</td><td>(0.7)</td><td>(1.2)</td></tr><tr class="sub"><td>Other general and administrative</td><td>(0.3)</td><td>(0.6)</td><td>(1.0)</td></tr><tr class=""><td>Total common costs</td><td>(4.1)</td><td>(6.5)</td><td>(10.2)</td></tr><tr class="sub"><td>as % of revenue</td><td>18.6%</td><td>11.1%</td><td>8.5%</td></tr><tr class="key"><td>EBITDA</td><td>(4.0)</td><td>0.1</td><td>14.5</td></tr><tr class="sub"><td>EBITDA margin</td><td>(18.2%)</td><td>0.2%</td><td>12.1%</td></tr><tr class=""><td>Depreciation</td><td>(0.4)</td><td>(1.3)</td><td>(2.5)</td></tr><tr class="key"><td>Profit before tax</td><td>(4.4)</td><td>(1.2)</td><td>12.0</td></tr><tr class=""><td>Tax at 25%</td><td>-</td><td>-</td><td>(3.0)</td></tr><tr class="total"><td>Profit after tax</td><td>(4.4)</td><td>(1.2)</td><td>9.0</td></tr></tbody></table></div>
+  <p class="note">The term loan was drawn on 31 March 2026, so FY24-FY26 carry no interest. Interest starts in FY27.</p>
+  <h2>Balance sheet items the model needs</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Balance sheet at 31 March 2026</th><th>₹ crore</th></tr></thead><tbody><tr class=""><td>Inventory</td><td>22.0</td></tr><tr class=""><td>Trade receivables</td><td>5.0</td></tr><tr class=""><td>Trade payables</td><td>(9.0)</td></tr><tr class="key"><td>Net working capital</td><td>18.0</td></tr><tr class="sub"><td>Working capital as % of FY26 revenue</td><td>15.0%</td></tr><tr class=""><td>Cash</td><td>15.0</td></tr><tr class=""><td>Debt (term loan)</td><td>30.0</td></tr><tr class="sub"><td>Interest rate on debt</td><td>12%</td></tr></tbody></table></div>
+</section>
+
+<section id="assum">
+  <p class="crumb">Case / 4. Assumptions</p>
+  <h1>The assumptions to model with</h1>
+  <hr class="rule">
+  <h2>Sheet one: offline retail stores</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Offline retail stores</th><th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th></tr></thead><tbody><tr class="head"><td><b>Revenue</b></td><td></td><td></td><td></td><td></td></tr><tr class=""><td>Bags revenue growth</td><td>40%</td><td>30%</td><td>25%</td><td>20%</td></tr><tr class=""><td>Accessories revenue growth</td><td>50%</td><td>40%</td><td>30%</td><td>25%</td></tr><tr class="head"><td><b>Variable costs, % of vertical revenue</b></td><td></td><td></td><td></td><td></td></tr><tr class=""><td>Gross margin</td><td>52%</td><td>52%</td><td>52%</td><td>52%</td></tr><tr class=""><td>Packaging</td><td>1.0%</td><td>1.0%</td><td>1.0%</td><td>1.0%</td></tr><tr class=""><td>Payment gateway charges</td><td>0.8%</td><td>0.8%</td><td>0.8%</td><td>0.8%</td></tr><tr class="key"><td>CM1 margin</td><td>50.2%</td><td>50.2%</td><td>50.2%</td><td>50.2%</td></tr><tr class=""><td>Performance marketing</td><td>6.0%</td><td>6.0%</td><td>6.0%</td><td>6.0%</td></tr><tr class="key"><td>CM2 margin</td><td>44.2%</td><td>44.2%</td><td>44.2%</td><td>44.2%</td></tr><tr class="head"><td><b>Fixed costs, grown year on year in rupees</b></td><td></td><td></td><td></td><td></td></tr><tr class=""><td>Store rent, FY26 base ₹7.0 Cr</td><td>+30%</td><td>+25%</td><td>+20%</td><td>+15%</td></tr><tr class=""><td>Store staff, FY26 base ₹5.0 Cr</td><td>+30%</td><td>+25%</td><td>+20%</td><td>+15%</td></tr></tbody></table></div>
+  <h2>Sheet two: D2C website and app</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>D2C website and app</th><th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th></tr></thead><tbody><tr class="head"><td><b>Revenue</b></td><td></td><td></td><td></td><td></td></tr><tr class=""><td>Bags revenue growth</td><td>35%</td><td>30%</td><td>25%</td><td>20%</td></tr><tr class=""><td>Accessories revenue growth</td><td>45%</td><td>35%</td><td>30%</td><td>25%</td></tr><tr class="head"><td><b>Variable costs, % of vertical revenue</b></td><td></td><td></td><td></td><td></td></tr><tr class=""><td>Gross margin</td><td>55%</td><td>55%</td><td>55%</td><td>55%</td></tr><tr class=""><td>Packaging</td><td>1.5%</td><td>1.5%</td><td>1.5%</td><td>1.5%</td></tr><tr class=""><td>Payment gateway charges</td><td>1.5%</td><td>1.5%</td><td>1.5%</td><td>1.5%</td></tr><tr class=""><td>Shipping</td><td>3.0%</td><td>3.0%</td><td>3.0%</td><td>3.0%</td></tr><tr class="key"><td>CM1 margin</td><td>49%</td><td>49%</td><td>49%</td><td>49%</td></tr><tr class=""><td>Performance marketing</td><td>28%</td><td>27%</td><td>26%</td><td>25%</td></tr><tr class="key"><td>CM2 margin, and the D2C contribution</td><td>21%</td><td>22%</td><td>23%</td><td>24%</td></tr></tbody></table></div>
+  <h2>Common costs, line by line</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Common cost line</th><th>FY26 actual</th><th>FY27</th><th>FY28</th><th>FY29</th><th>FY30</th><th>Why</th></tr></thead><tbody><tr class=""><td>Head office salaries</td><td>₹5.0 Cr</td><td>+30%</td><td>+25%</td><td>+20%</td><td>+15%</td><td>Increments plus hiring; tapers as functions fill out</td></tr><tr class=""><td>Brand marketing</td><td>₹3.0 Cr</td><td>+35%</td><td>+30%</td><td>+25%</td><td>+20%</td><td>Fastest line; spend leads the new-city store openings</td></tr><tr class=""><td>Technology and platform</td><td>₹1.2 Cr</td><td>+25%</td><td>+20%</td><td>+18%</td><td>+15%</td><td>Platform built once; only licences scale</td></tr><tr class=""><td>Other general and administrative</td><td>₹1.0 Cr</td><td>+20%</td><td>+18%</td><td>+15%</td><td>+12%</td><td>Audit, legal, insurance, office rent, travel</td></tr><tr class="key"><td>Total common costs</td><td>₹10.2 Cr</td><td>₹13.3 Cr</td><td>₹16.6 Cr</td><td>₹20.1 Cr</td><td>₹23.4 Cr</td><td>Sum of the four lines</td></tr><tr class="sub"><td>as % of revenue</td><td>8.5%</td><td>7.9%</td><td>7.5%</td><td>7.2%</td><td>6.9%</td><td>Falls every year: no line grows as fast as revenue</td></tr></tbody></table></div>
+  <h2>Corporate</h2>
+  <div class="tbl-wrap"><table class=""><thead><tr><th>Particulars</th><th>Value</th></tr></thead><tbody><tr class=""><td>Depreciation on existing fit-outs p.a. (₹ cr), FY26 onwards</td><td>2.5</td></tr><tr class=""><td>Bag-stitching machines, total cost (₹ cr)</td><td>5.0</td></tr><tr class=""><td>Year of purchase</td><td>FY29</td></tr><tr class=""><td>Machine life (years)</td><td>5.0</td></tr><tr class=""><td>Additional depreciation (FY29 onwards)</td><td>1.00</td></tr><tr class=""><td>Working capital (% of revenue)</td><td>15%</td></tr><tr class=""><td>Working capital at 31 Mar 2026 (₹ cr)</td><td>18.0</td></tr><tr class=""><td>Tax rate</td><td>25%</td></tr><tr class=""><td>Debt as on 31/3/2026 (₹ cr)</td><td>30.0</td></tr><tr class=""><td>Interest cost (%)</td><td>12%</td></tr><tr class=""><td>Cash as on 31/3/2026 (₹ cr)</td><td>15.0</td></tr><tr class=""><td>Founder's preferred value (₹ cr)</td><td>170.0</td></tr></tbody></table></div>
+</section>
+
+</main>
+</div>
+<script>
+document.querySelectorAll('nav button').forEach(function(b){
+  b.onclick=function(){
+    document.querySelectorAll('nav button').forEach(function(x){x.setAttribute('aria-current','false');});
+    b.setAttribute('aria-current','true');
+    document.querySelectorAll('section').forEach(function(s){s.classList.toggle('on',s.id===b.dataset.s);});
+    window.scrollTo({top:0});
+  };
+});
+
+</script>
+</body>
+</html>
