@@ -1,5 +1,5 @@
 /* DCF Sprint — all pages, widgets and the exam simulator. Model maths lives in model.js. */
-const { run, CASES, YEARS, irr } = window.DCF;
+const { run, CASES, YEARS, irr, hist } = window.DCF;
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const fmt = (v, d = 2) => (v == null || isNaN(v)) ? '' : (Math.abs(v) < 0.005 && d <= 2 ? 0 : v).toFixed(d);
@@ -82,20 +82,7 @@ function mountSheet(el, defFn) {
 
 /* ---------------- Sheet definitions (same layout as the class file) ---------------- */
 const F = ['F', 'G', 'H', 'I'], P = ['E', 'F', 'G', 'H'], A = ['C', 'D', 'E', 'F'];
-const HIST = {
-  off: { 6: [8, 23, 53], 7: [2, 7, 17], 8: [10, 30, 70], 9: [5.5, 15.6, 35], 10: [4.5, 14.4, 35], 11: [.2, .4, .8], 12: [.1, .3, .6], 13: [4.2, 13.7, 33.6], 14: [.7, 1.8, 3.5], 15: [3.5, 11.9, 30.1], 16: [2.4, 5.4, 9.1], 17: [1.8, 4.2, 7], 18: [-.7, 2.3, 14] },
-  dc: { 6: [16, 35, 60], 7: [4, 10, 20], 8: [20, 45, 80], 9: [10.2, 22.1, 37.6], 10: [9.8, 22.9, 42.4], 11: [.3, .7, 1.2], 12: [.3, .7, 1.2], 13: [.6, 1.3, 2], 14: [8.6, 20.2, 38], 15: [7.6, 14, 22], 16: [1, 6.2, 16] },
-  con: { 6: [10, 30, 70], 7: [20, 45, 80], 8: [30, 75, 150], 9: [-.7, 2.3, 14], 10: [1, 6.2, 16], 11: [.3, 8.5, 30], 12: [2.6, 4, 6], 13: [1.4, 2.2, 3.4], 14: [.5, .9, 1.5], 15: [.5, .9, 1.5], 16: [-4.7, .5, 17.6], 17: [.5, 1.5, 3], 18: [-5.2, -1, 14.6], 19: [0, 0, 0], 20: [-5.2, -1, 14.6], 21: [0, 0, 3.65], 22: [-5.2, -1, 10.95] }
-};
-function histFor(m) {
-  if (m.c.id === 'coolnomad') return HIST;
-  const c = m.c, e = v => [null, null, v];
-  return {
-    off: { 6: e(c.off.bags0), 7: e(c.off.acc0), 8: e(c.off.bags0 + c.off.acc0), 16: e(c.off.rent0), 17: e(c.off.staff0) },
-    dc: { 6: e(c.d2c.bags0), 7: e(c.d2c.acc0), 8: e(c.d2c.bags0 + c.d2c.acc0) },
-    con: { 12: e(c.common.sal0), 13: e(c.common.brand0), 14: e(c.common.tech0), 15: e(c.common.oth0), 17: e(c.dep0) }
-  };
-}
+const histFor = m => window.DCF.hist(m.c);
 function mkRows(spec, data, hist) {
   return spec.map(([r, label, key, fn, why, sub]) => {
     const cells = {};
@@ -223,56 +210,64 @@ const QS = [
   ['IRR if the deal happens at the founder’s ask (in %, e.g. 18.5)', m => m.v.irr, '=IRR(−ask, FCFE27, FCFE28, FCFE29, FCFE30 + TV)', 'pct']
 ];
 
-/* ---------------- Case brief for the practice / test cases ---------------- */
-function caseBrief(c) {
+/* ---------------- Case guidelines (same sections as the professor's case HTML) ---------------- */
+const INVESTOR = { coolnomad: ['Arjun Varma', 'Meridian Growth Partners'], practice: ['Nisha Kapoor', 'Summit Ridge Capital'], test: ['Rohan Mehta', 'Northstar Ventures'] };
+const n1 = x => x < 0 ? `(${Math.abs(x).toFixed(1)})` : x.toFixed(1);
+function caseDoc(c) {
+  const h = hist(c), Y3 = ['FY24', 'FY25', 'FY26'], [who, fund] = INVESTOR[c.id];
+  const rev26 = h.con[8][2], off = h.off, dc = h.dc, k = h.con;
+  const tr = (l, a, o = {}) => `<tr${o.b ? ' class="sub"' : ''}><td>${l}</td>${a.map(x => `<td>${o.p ? (x < 0 ? `(${Math.abs(x * 100).toFixed(1)}%)` : (x * 100).toFixed(1) + '%') : o.neg ? n1(-x) : n1(x)}</td>`).join('')}</tr>`;
+  const t3 = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${title}</th>${Y3.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  const ratio = (a, b) => a.map((x, i) => x / b[i]);
   const rowP = (l, a) => `<tr><td>${l}</td>${a.map(x => `<td>${pct(x, 1)}</td>`).join('')}</tr>`;
-  const tbl = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${title}</th>${YEARS.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-  return `
-  <div class="card"><b>${c.name}</b> · ${c.biz}. Two verticals: own stores (offline) and D2C website/app. Each is split into bags and accessories. Value the company as at 31 March 2026 using FCFE, forecasting FY27–FY30.
-  <div class="grid3" style="margin-top:12px">
-    <div class="stat"><b>${pct(c.r, 0)}</b><span>Required return</span></div>
-    <div class="stat"><b>${pct(c.g, 0)}</b><span>Terminal growth</span></div>
-    <div class="stat"><b>₹${c.ask} cr</b><span>Founder’s ask (preferred value)</span></div>
-  </div></div>
-  <h3>FY26 base figures (₹ cr)</h3>
-  <div class="tablewrap"><table><tbody>
-   <tr><td>Offline bags / accessories revenue</td><td>${c.off.bags0} / ${c.off.acc0}</td></tr>
-   <tr><td>Store rent / store staff</td><td>${c.off.rent0} / ${c.off.staff0}</td></tr>
-   <tr><td>D2C bags / accessories revenue</td><td>${c.d2c.bags0} / ${c.d2c.acc0}</td></tr>
-   <tr><td>Head office salaries / brand marketing / technology / other G&amp;A</td><td>${c.common.sal0} / ${c.common.brand0} / ${c.common.tech0} / ${c.common.oth0}</td></tr>
-   <tr><td>Working capital at 31 Mar 2026</td><td>${c.wc0}</td></tr>
-   <tr><td>Debt at 31 Mar 2026 (constant) · interest rate</td><td>${c.debt} · ${pct(c.intRate, 0)}</td></tr>
-   <tr><td>Cash at 31 Mar 2026</td><td>${c.cash}</td></tr>
-  </tbody></table></div>
-  <h3>Assumptions</h3>
-  ${tbl('Offline retail', rowP('Bags growth', c.off.gB) + rowP('Accessories growth', c.off.gA) + rowP('Gross margin', c.off.gm) + rowP('Packaging (% rev)', c.off.pack) + rowP('Payment gateway (% rev)', c.off.pg) + rowP('Performance marketing (% rev)', c.off.pm) + rowP('Store rent growth', c.off.gRent) + rowP('Store staff growth', c.off.gStaff))}
-  ${tbl('D2C', rowP('Bags growth', c.d2c.gB) + rowP('Accessories growth', c.d2c.gA) + rowP('Gross margin', c.d2c.gm) + rowP('Packaging (% rev)', c.d2c.pack) + rowP('Payment gateway (% rev)', c.d2c.pg) + rowP('Shipping (% rev)', c.d2c.ship) + rowP('Performance marketing (% rev)', c.d2c.pm))}
-  ${tbl('Common cost growth', rowP('Head office salaries', c.common.gSal) + rowP('Brand marketing', c.common.gBrand) + rowP('Technology and platform', c.common.gTech) + rowP('Other G&amp;A', c.common.gOth))}
+  const t4 = (title, rows) => `<div class="tablewrap"><table><thead><tr><th>${title}</th>${YEARS.map(y => `<th>${y}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  const grows = (l, base, g) => `<tr><td>${l}, FY26 base ₹${base} Cr</td>${g.map(x => `<td>+${(x * 100).toFixed(0)}%</td>`).join('')}</tr>`;
+  const sec = (n, t) => `<div class="docsec"><span class="mlabel">Case / ${n}</span><h3>${t}</h3></div>`;
+  return `<div class="doc">
+  ${sec('1. About ' + c.name, 'Company and verticals')}
+  <p>${c.name} is an Indian ${c.biz.toLowerCase()} brand. It sells through two verticals it owns outright: its <b>own retail stores</b> and its <b>D2C website and app</b>. Each vertical sells <b>bags</b> and <b>accessories</b>. FY26 closed at <b>₹${n1(rev26)} crore</b> of revenue and <b>₹${n1(k[16][2])} crore</b> of EBITDA.</p>
+  <div class="grid3"><div class="stat"><b>₹${n1(rev26)} Cr</b><span>FY26 revenue</span></div><div class="stat"><b>₹${n1(off[8][2])} / ${n1(dc[8][2])} Cr</b><span>Offline / D2C</span></div><div class="stat"><b>₹${n1(k[16][2])} Cr</b><span>FY26 EBITDA</span></div></div>
+  ${sec('2. The mandate', 'What the investor wants')}
+  <div class="mail"><div class="mail-h"><span class="mlabel">From</span> ${who}, Managing Partner, ${fund}<br><span class="mlabel">Subject</span> ${c.name}: how I want this one valued</div>
+  <p>Team,</p>
+  <p><b>Discount rate.</b> Our required return is <b>${pct(c.r, 0)}</b> a year. Terminal growth is <b>${pct(c.g, 0)}</b>. Forecast <b>FY27 to FY30</b> and value the company as at <b>31 March 2026</b>. Four years, no more.</p>
+  <p><b>Model the two verticals separately</b>, and split each into bags and accessories. Revenue less cost of goods sold gives gross margin. Take off packaging and payment gateway charges (and shipping in D2C) to get <b>CM1</b>. Take off performance marketing to get <b>CM2</b>. In the stores, rent and staff sit below CM2 and give the store contribution.</p>
+  <p><b>Rent and staff are fixed costs.</b> Do not run them as a percentage of revenue: grow the FY26 rupee amount year on year. Common costs (salaries, brand marketing, technology, other G&amp;A) each have their own growth rate.</p>
+  <p><b>Working capital</b> is held at <b>${pct(c.wcPct, 0)} of revenue</b>; treat the increase as cash out. FY26 working capital was ₹${c.wc0} crore.</p>
+  <p><b>One lump of capex:</b> ${c.asset} costing <b>₹${c.capex} crore</b>, all in <b>${YEARS[c.capexYear]}</b>, depreciated over <b>${c.life} years</b> from that year. Depreciation on existing assets continues at ₹${c.dep0} crore a year.</p>
+  <p><b>Debt.</b> The company carries <b>₹${c.debt} crore</b> of debt at <b>${pct(c.intRate, 0)}</b>, held constant. Tax at ${pct(c.tax, 0)} on profit before tax, and no tax in a loss year. Cash on the balance sheet is ₹${c.cash} crore.</p>
+  <p><b>The ask.</b> The founder wants a valuation of <b>₹${c.ask} crore</b>. Value the equity with FCFE, then give me the enterprise value, the NPV against the ask and the IRR if we pay the ask. Three cases: upside <b>1.2×</b> and downside <b>0.8×</b> the base.</p>
+  <p>${who}</p></div>
+  ${sec('3. Historicals', 'Three years of actuals (₹ crore)')}
+  ${t3('Offline retail stores', tr('Bags revenue', off[6]) + tr('Accessories revenue', off[7]) + tr('Total revenue', off[8], { b: 1 }) + tr('Cost of goods sold', off[9], { neg: 1 }) + tr('Gross margin', off[10], { b: 1 }) + tr('Gross margin %', ratio(off[10], off[8]), { p: 1 }) + tr('Packaging', off[11], { neg: 1 }) + tr('Payment gateway charges', off[12], { neg: 1 }) + tr('CM1', off[13], { b: 1 }) + tr('Performance marketing', off[14], { neg: 1 }) + tr('CM2', off[15], { b: 1 }) + tr('Store rent', off[16], { neg: 1 }) + tr('Store staff', off[17], { neg: 1 }) + tr('Store contribution', off[18], { b: 1 }))}
+  ${t3('D2C website and app', tr('Bags revenue', dc[6]) + tr('Accessories revenue', dc[7]) + tr('Total revenue', dc[8], { b: 1 }) + tr('Cost of goods sold', dc[9], { neg: 1 }) + tr('Gross margin', dc[10], { b: 1 }) + tr('Gross margin %', ratio(dc[10], dc[8]), { p: 1 }) + tr('Packaging', dc[11], { neg: 1 }) + tr('Payment gateway charges', dc[12], { neg: 1 }) + tr('Shipping', dc[13], { neg: 1 }) + tr('CM1', dc[14], { b: 1 }) + tr('Performance marketing', dc[15], { neg: 1 }) + tr('CM2, the D2C contribution', dc[16], { b: 1 }))}
+  ${t3('Consolidated', tr('Total revenue', k[8], { b: 1 }) + tr('Total vertical contribution', k[11], { b: 1 }) + tr('Head office salaries', k[12], { neg: 1 }) + tr('Brand marketing', k[13], { neg: 1 }) + tr('Technology and platform', k[14], { neg: 1 }) + tr('Other general and administrative', k[15], { neg: 1 }) + tr('EBITDA', k[16], { b: 1 }) + tr('Depreciation', k[17], { neg: 1 }) + tr('Profit before tax', k[18], { b: 1 }) + tr('Tax', k[21], { neg: 1 }) + tr('Profit after tax', k[22], { b: 1 }))}
+  <div class="tablewrap"><table><thead><tr><th>Balance sheet at 31 March 2026</th><th>₹ crore</th></tr></thead><tbody>
+   <tr><td>Net working capital</td><td>${n1(c.wc0)}</td></tr><tr><td>Working capital as % of FY26 revenue</td><td>${pct(c.wc0 / rev26, 1)}</td></tr>
+   <tr><td>Cash</td><td>${n1(c.cash)}</td></tr><tr><td>Debt</td><td>${n1(c.debt)} at ${pct(c.intRate, 0)}</td></tr></tbody></table></div>
+  ${sec('4. Assumptions', 'The assumptions to model with')}
+  ${t4('Sheet one: offline retail stores', rowP('Bags revenue growth', c.off.gB) + rowP('Accessories revenue growth', c.off.gA) + rowP('Gross margin', c.off.gm) + rowP('Packaging', c.off.pack) + rowP('Payment gateway charges', c.off.pg) + rowP('Performance marketing', c.off.pm) + grows('Store rent', c.off.rent0, c.off.gRent) + grows('Store staff', c.off.staff0, c.off.gStaff))}
+  ${t4('Sheet two: D2C website and app', rowP('Bags revenue growth', c.d2c.gB) + rowP('Accessories revenue growth', c.d2c.gA) + rowP('Gross margin', c.d2c.gm) + rowP('Packaging', c.d2c.pack) + rowP('Payment gateway charges', c.d2c.pg) + rowP('Shipping', c.d2c.ship) + rowP('Performance marketing', c.d2c.pm))}
+  ${t4('Common costs, line by line', grows('Head office salaries', c.common.sal0, c.common.gSal) + grows('Brand marketing', c.common.brand0, c.common.gBrand) + grows('Technology and platform', c.common.tech0, c.common.gTech) + grows('Other general and administrative', c.common.oth0, c.common.gOth))}
   <div class="tablewrap"><table><thead><tr><th>Corporate</th><th>Value</th></tr></thead><tbody>
-   <tr><td>Depreciation on existing assets p.a.</td><td>₹${c.dep0} cr</td></tr>
-   <tr><td>Capex (machines), year bought, life</td><td>₹${c.capex} cr · ${YEARS[c.capexYear]} · ${c.life} years (depreciation from the year bought)</td></tr>
-   <tr><td>Working capital (% of total revenue)</td><td>${pct(c.wcPct, 0)}</td></tr>
-   <tr><td>Tax rate (no tax on a loss)</td><td>${pct(c.tax, 0)}</td></tr>
-   <tr><td>Scenarios</td><td>Upside 1.2× · Downside 0.8× of base</td></tr>
-  </tbody></table></div>
-  <div class="toolbar"><button data-copy="${c.id}">Copy assumptions for Google Sheets</button><span class="pill" id="copied-${c.id}"></span></div>`;
+   <tr><td>Depreciation on existing assets p.a. (₹ cr)</td><td>${c.dep0}</td></tr>
+   <tr><td>${c.asset[0].toUpperCase() + c.asset.slice(1)}, total cost (₹ cr)</td><td>${c.capex}</td></tr>
+   <tr><td>Year of purchase</td><td>${YEARS[c.capexYear]}</td></tr><tr><td>Life (years)</td><td>${c.life}</td></tr>
+   <tr><td>Additional depreciation (${YEARS[c.capexYear]} onwards)</td><td>${fmt(c.capex / c.life)}</td></tr>
+   <tr><td>Working capital (% of revenue)</td><td>${pct(c.wcPct, 0)}</td></tr><tr><td>Working capital at 31 Mar 2026 (₹ cr)</td><td>${c.wc0}</td></tr>
+   <tr><td>Tax rate</td><td>${pct(c.tax, 0)}</td></tr><tr><td>Debt as on 31/3/2026 (₹ cr)</td><td>${c.debt}</td></tr><tr><td>Interest cost (%)</td><td>${pct(c.intRate, 0)}</td></tr>
+  </tbody></table></div></div>`;
 }
-function bindCopy(c) {
-  const b = $(`[data-copy="${c.id}"]`); if (!b) return;
-  b.onclick = async () => {
-    const L = (l, a) => [l, ...a].join('\t');
-    const t = [
-      `${c.name} assumptions\tFY27\tFY28\tFY29\tFY30`,
-      'Offline retail', L('Bags revenue growth', c.off.gB), L('Accessories revenue growth', c.off.gA), L('Gross margin', c.off.gm), L('Packaging', c.off.pack), L('Payment gateway', c.off.pg), L('Performance marketing', c.off.pm), L('Store rent growth', c.off.gRent), L('Store staff growth', c.off.gStaff),
-      'D2C', L('Bags revenue growth', c.d2c.gB), L('Accessories revenue growth', c.d2c.gA), L('Gross margin', c.d2c.gm), L('Packaging', c.d2c.pack), L('Payment gateway', c.d2c.pg), L('Shipping', c.d2c.ship), L('Performance marketing', c.d2c.pm),
-      'Common cost growth', L('Head office salaries', c.common.gSal), L('Brand marketing', c.common.gBrand), L('Technology and platform', c.common.gTech), L('Other G&A', c.common.gOth),
-      'FY26 base', `Offline bags\t${c.off.bags0}`, `Offline accessories\t${c.off.acc0}`, `Store rent\t${c.off.rent0}`, `Store staff\t${c.off.staff0}`, `D2C bags\t${c.d2c.bags0}`, `D2C accessories\t${c.d2c.acc0}`,
-      `Head office salaries\t${c.common.sal0}`, `Brand marketing\t${c.common.brand0}`, `Technology\t${c.common.tech0}`, `Other G&A\t${c.common.oth0}`,
-      'Corporate', `Depreciation existing p.a.\t${c.dep0}`, `Capex\t${c.capex}`, `Capex year\t${YEARS[c.capexYear]}`, `Life (years)\t${c.life}`, `Working capital % revenue\t${c.wcPct}`, `Working capital FY26\t${c.wc0}`, `Tax rate\t${c.tax}`, `Debt\t${c.debt}`, `Interest rate\t${c.intRate}`, `Cash\t${c.cash}`, `Required return\t${c.r}`, `Terminal growth\t${c.g}`, `Founder ask\t${c.ask}`
-    ].join('\n');
-    try { await navigator.clipboard.writeText(t); $(`#copied-${c.id}`).textContent = 'Copied. Paste into a blank Google Sheet.'; }
-    catch (e) { $(`#copied-${c.id}`).textContent = 'Copy blocked by the browser. Select the tables above instead.'; }
-  };
+/* The exam kit: same two files the exam hands out, plus the answer key once you are allowed to see it. */
+function kit(c, showKey) {
+  const f = (k, label) => `<a class="btn ${k === 'blank-template' ? 'primary' : ''}" href="files/${c.id}-${k}.xlsx" download="${c.name} - ${label}.xlsx">↓ ${label} (.xlsx)</a>`;
+  return `<div class="card"><span class="mlabel">Your exam kit</span>
+  <ol class="tight"><li><b>Download the blank template.</b> It is the class file with ${c.name}’s historicals and Assumptions sheet filled in. Every forecast cell (columns F–I) and the whole DCF (FCFE) sheet are blank, exactly like the exam.</li>
+  <li><b>Open it</b> in Excel, or in Google Sheets (File → Import → Upload).</li>
+  <li><b>Read the case guidelines</b> below. Type the discount rate, terminal growth, capex and founder’s ask where the case gives them (yellow cells on the DCF sheet).</li>
+  <li><b>Fill every blank with formulas</b>, then answer the 25 questions from your model.</li>
+  ${showKey ? '<li><b>Compare</b> with the answer key: the same file with every formula filled in.</li>' : ''}</ol>
+  <div class="toolbar">${f('blank-template', 'Blank template')}${showKey ? f('answer-key', 'Answer key') : ''}<button onclick="print()">Print case guidelines</button></div></div>`;
 }
 function fullModel(m, el) {
   el.innerHTML = `<h3>Offline retail</h3><div id="fm-off"></div><h3>D2C</h3><div id="fm-d2c"></div><h3>Consolidated</h3><div id="fm-con"></div><h3>DCF (FCFE)</h3><div id="fm-dcf"></div>
@@ -553,6 +548,8 @@ R.s4 = () => `<h1>Sprint 4 · The forecast sheets</h1>
   <tr><td>Subtract down</td><td>GM, CM1, CM2, contribution, EBITDA, EBIT, PBT, PAT</td><td><code>=F10-F11-F12</code></td></tr>
   <tr><td>Link across sheets</td><td>Consolidated, DCF inputs</td><td><code>='Offline retail'!F8</code></td></tr>
   <tr><td>Locked constant ($)</td><td>Depreciation, interest, tax rate</td><td><code>=MAX(0,F20*Assumptions!$C$41)</code></td></tr></tbody></table></div>
+  <div class="card"><span class="mlabel">Follow along in Excel</span><p style="margin:6px 0 10px">Download the Cool Nomad blank template (the class file with every forecast and DCF cell empty) and fill it in as you go. Check yourself against the answer key.</p>
+  <div class="toolbar" style="margin:0"><a class="btn primary" href="files/coolnomad-blank-template.xlsx" download="Cool Nomad - Blank template.xlsx">↓ Blank template (.xlsx)</a><a class="btn" href="files/coolnomad-answer-key.xlsx" download="Cool Nomad - Answer key.xlsx">↓ Answer key (.xlsx)</a></div></div>
   <div class="callout">Column map: forecast sheets use <b>F, G, H, I</b> for FY27–FY30, but the Assumptions sheet uses <b>C, D, E, F</b>. Your formula in F points at Assumptions column C. Write it once in F, then drag right.</div>
   <h2>Offline retail</h2><div id="sh-off"></div>
   <h2>D2C &amp; App</h2><div id="sh-d2c"></div>
@@ -635,14 +632,15 @@ function qRows(mode, m, ans) {
 }
 const PM = run(CASES.practice), TM = run(CASES.test);
 R.practice = () => `<h1>Practice test · ${PM.c.name}</h1>
-  <p class="lead">Same structure as Cool Nomad, new numbers. Build it in Google Sheets (copy the Cool Nomad practice file and swap the assumptions), then enter your answers. Hints are on. Answers are saved in this browser.</p>
-  ${caseBrief(PM.c)}
+  <p class="lead">Exactly like the exam: a blank Excel template, a case document, 50 marks of questions. Hints are on and answers are saved in this browser.</p>
+  ${kit(PM.c, true)}
+  <h2>Case guidelines · ${PM.c.name}</h2>
+  ${caseDoc(PM.c)}
   <h2>Questions (50 marks)</h2>
   <div class="card" id="pq">${qRows('practice', PM, store.get('pans', {}))}</div>
   <div class="toolbar"><button id="p-score" class="primary">Score me</button><button id="p-reset">Clear answers</button><button id="p-key">Show full model (answer key)</button><span id="p-res" class="pill"></span></div>
   <div id="p-model"></div>${footer('practice')}`;
 R.practice.after = () => {
-  bindCopy(PM.c);
   const ans = store.get('pans', {});
   $$('#pq input').forEach(inp => inp.oninput = () => { ans[inp.dataset.q] = inp.value; store.set('pans', ans); inp.classList.remove('ok', 'no'); });
   $$('[data-chk]').forEach(b => b.onclick = () => { const i = +b.dataset.chk, inp = $(`#pq input[data-q="${i}"]`); inp.classList.remove('ok', 'no'); inp.classList.add(close(inp.value, QS[i][1](PM), QS[i][3]) ? 'ok' : 'no'); });
@@ -657,7 +655,7 @@ R.test = () => {
   const st = store.get('test', {});
   const m = TM;
   if (!st.start) return `<h1>Mock exam · ${m.c.name}</h1>
-    <p class="lead">Timed, no hints, scored out of 50 at the end, just like Thursday. Read the case, build the model in Google Sheets, then fill in the answers.</p>
+    <p class="lead">Timed, no hints, scored out of 50 at the end, just like Thursday. When the clock starts you get the blank Excel template and the case document. Build the model, then fill in the answers.</p>
     <div class="card"><div class="inputs"><label class="f">Time limit<select id="t-len"><option value="150">2 h 30 min (real exam)</option><option value="90">1 h 30 min</option><option value="60" selected>1 h (speed run)</option></select></label></div>
     <button class="primary" id="t-go">Start the clock</button></div>${footer('test')}`;
   const graded = !!st.submitted;
@@ -665,7 +663,9 @@ R.test = () => {
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <span class="timer" id="t-clock">${graded ? `Score: ${st.score} / 50` : ''}</span>
       <span>${graded ? '<button id="t-again">Retake</button>' : '<button class="primary" id="t-sub">Submit and grade</button>'}</span></div>
-    ${caseBrief(m.c)}
+    ${kit(m.c, graded)}
+    <h2>Case guidelines · ${m.c.name}</h2>
+    ${caseDoc(m.c)}
     <h2>Answer sheet (50 marks)</h2>
     <div class="card" id="tq">${qRows(graded ? 'review' : 'test', m, st.ans || {})}</div>
     ${graded ? '<div class="toolbar"><button id="t-key">Show full model (answer key)</button></div><div id="t-model"></div>' : ''}${footer('test')}`;
@@ -673,7 +673,6 @@ R.test = () => {
 R.test.after = () => {
   clearInterval(timerInt);
   const st = store.get('test', {});
-  bindCopy(TM.c);
   if (!st.start) { $('#t-go').onclick = () => { store.set('test', { start: Date.now(), len: +$('#t-len').value, ans: {} }); render(); }; return; }
   const submit = () => {
     const s = store.get('test', {}); let score = 0;

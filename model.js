@@ -100,7 +100,7 @@
 
   const CASES = {
     coolnomad: {
-      id: 'coolnomad', name: 'Cool Nomad', biz: 'Hard-shell luggage and travel accessories',
+      id: 'coolnomad', name: 'Cool Nomad', biz: 'Hard-shell luggage and travel accessories', asset: 'engraving machines',
       off: { bags0: 53, acc0: 17, gB: [.45, .35, .28, .22], gA: [.55, .45, .35, .28], gm: [.5, .5, .5, .5],
         pack: [.012, .01, .012, .012], pg: [.008, .008, .008, .008], pm: [.05, .05, .05, .05],
         rent0: 9.1, staff0: 7, gRent: [.32, .26, .2, .16], gStaff: [.34, .28, .22, .18] },
@@ -112,7 +112,7 @@
       debt: 40, intRate: .10, cash: 18, r: .20, g: .05, ask: 300
     },
     practice: {
-      id: 'practice', name: 'TrekLite', biz: 'Hiking backpacks and outdoor accessories',
+      id: 'practice', name: 'TrekLite', biz: 'Hiking backpacks and outdoor accessories', asset: 'bag-stitching machines',
       off: { bags0: 40, acc0: 10, gB: [.40, .30, .25, .20], gA: [.50, .40, .30, .25], gm: [.52, .52, .52, .52],
         pack: [.01, .01, .01, .01], pg: [.008, .008, .008, .008], pm: [.06, .06, .06, .06],
         rent0: 7, staff0: 5, gRent: [.30, .25, .20, .15], gStaff: [.30, .25, .20, .15] },
@@ -124,7 +124,7 @@
       debt: 30, intRate: .12, cash: 15, r: .21, g: .05, ask: 170
     },
     test: {
-      id: 'test', name: 'Wanderly', biz: 'Premium travel duffels and organisers',
+      id: 'test', name: 'Wanderly', biz: 'Premium travel duffels and organisers', asset: 'warehouse racking and packing line',
       off: { bags0: 60, acc0: 15, gB: [.38, .30, .24, .18], gA: [.48, .38, .30, .24], gm: [.48, .49, .50, .50],
         pack: [.012, .012, .012, .012], pg: [.01, .01, .01, .01], pm: [.045, .045, .045, .045],
         rent0: 11, staff0: 8, gRent: [.28, .22, .18, .14], gStaff: [.30, .24, .20, .16] },
@@ -137,6 +137,43 @@
     }
   };
 
-  const api = { run, CASES, YEARS, irr };
+  // FY24..FY26 actuals keyed by sheet row (same rows as the class file). Cool Nomad's are the case's own
+  // numbers; the other cases get history derived from their FY26 bases so the FY26 column ties out.
+  const r1 = x => Math.round(x * 10) / 10;
+  const HIST_CN = {
+    off: { 6: [8, 23, 53], 7: [2, 7, 17], 9: [5.5, 15.6, 35], 11: [.2, .4, .8], 12: [.1, .3, .6], 14: [.7, 1.8, 3.5], 16: [2.4, 5.4, 9.1], 17: [1.8, 4.2, 7] },
+    dc: { 6: [16, 35, 60], 7: [4, 10, 20], 9: [10.2, 22.1, 37.6], 11: [.3, .7, 1.2], 12: [.3, .7, 1.2], 13: [.6, 1.3, 2], 15: [7.6, 14, 22] },
+    con: { 12: [2.6, 4, 6], 13: [1.4, 2.2, 3.4], 14: [.5, .9, 1.5], 15: [.5, .9, 1.5], 17: [.5, 1.5, 3] }
+  };
+  function histInputs(c) {
+    if (c.id === 'coolnomad') return HIST_CN;
+    const back = (v, a, b) => [r1(v / b / a), r1(v / b), v];       // a = FY25 growth factor, b = FY26 growth factor
+    const pctOf = (rev, p, lift) => rev.map((x, i) => r1(x * p * [lift, (1 + lift) / 2, 1][i]));
+    const vert = (s, extra) => {
+      const bags = back(s.bags0, 2.6, 2.0), acc = back(s.acc0, 2.9, 2.2), rev = bags.map((b, i) => b + acc[i]);
+      const gm = [s.gm[0] - .05, s.gm[0] - .02, s.gm[0]];
+      const h = { 6: bags, 7: acc, 9: rev.map((x, i) => r1(x * (1 - gm[i]))), 11: pctOf(rev, s.pack[0], 1.3), 12: pctOf(rev, s.pg[0], 1.3) };
+      return Object.assign(h, extra(rev));
+    };
+    return {
+      off: vert(c.off, rev => ({ 14: pctOf(rev, c.off.pm[0], 1.4), 16: back(c.off.rent0, 2.0, 1.6), 17: back(c.off.staff0, 2.2, 1.7) })),
+      dc: vert(c.d2c, rev => ({ 13: pctOf(rev, c.d2c.ship[0], 1.3), 15: pctOf(rev, c.d2c.pm[0], 1.45) })),
+      con: { 12: back(c.common.sal0, 1.5, 1.5), 13: back(c.common.brand0, 1.6, 1.55), 14: back(c.common.tech0, 1.8, 1.65), 15: back(c.common.oth0, 1.8, 1.65), 17: [r1(c.dep0 / 6), r1(c.dep0 / 2), c.dep0] }
+    };
+  }
+  // Full historical columns, with subtotal rows computed the way the sheet's formulas would.
+  function hist(c) {
+    const h = histInputs(c), o = Object.assign({}, h.off), d = Object.assign({}, h.dc), k = Object.assign({}, h.con);
+    const z = [0, 1, 2], s = (f) => z.map(f);
+    o[8] = s(i => o[6][i] + o[7][i]); o[10] = s(i => o[8][i] - o[9][i]); o[13] = s(i => o[10][i] - o[11][i] - o[12][i]);
+    o[15] = s(i => o[13][i] - o[14][i]); o[18] = s(i => o[15][i] - o[16][i] - o[17][i]);
+    d[8] = s(i => d[6][i] + d[7][i]); d[10] = s(i => d[8][i] - d[9][i]); d[14] = s(i => d[10][i] - d[11][i] - d[12][i] - d[13][i]); d[16] = s(i => d[14][i] - d[15][i]);
+    k[6] = o[8]; k[7] = d[8]; k[8] = s(i => o[8][i] + d[8][i]); k[9] = o[18]; k[10] = d[16]; k[11] = s(i => o[18][i] + d[16][i]);
+    k[16] = s(i => k[11][i] - k[12][i] - k[13][i] - k[14][i] - k[15][i]); k[18] = s(i => k[16][i] - k[17][i]);
+    k[19] = [0, 0, 0]; k[20] = k[18]; k[21] = s(i => Math.max(0, k[20][i] * c.tax)); k[22] = s(i => k[20][i] - k[21][i]);
+    return { off: o, dc: d, con: k, inputs: h };
+  }
+
+  const api = { run, CASES, YEARS, irr, hist };
   if (typeof module !== 'undefined') module.exports = api; else root.DCF = api;
 })(this);
