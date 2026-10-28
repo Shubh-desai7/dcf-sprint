@@ -298,19 +298,21 @@ const PAGES = [
 const done = () => store.get('done', {});
 function nav() {
   const cur = location.hash.slice(1) || 'home', d = done();
-  let g = '', side = `<div class="brand">DCF Sprint</div><div class="brand-sub">Financial Modelling &amp; Valuations · DCF exam</div>`;
-  PAGES.forEach(p => {
-    if (p.g !== g) { g = p.g; side += `<div class="grp">${g}</div>`; }
-    const mark = p.n != null ? `<span class="dot ${d[p.id] ? 'done' : ''}">${d[p.id] ? '✓' : p.n}</span>` : `<span class="dot">${p.icon}</span>`;
-    side += `<a href="#${p.id}" class="${cur === p.id ? 'active' : ''}">${mark}${p.t}</a>`;
-  });
-  side += `<button class="themebtn" id="theme">Toggle dark / light</button>`;
-  $('#side').innerHTML = side;
-  $('#topnav').innerHTML = PAGES.map(p => `<a href="#${p.id}" class="${cur === p.id ? 'active' : ''}">${p.n != null ? (d[p.id] ? '✓ ' : p.n + '. ') : ''}${p.t}</a>`).join('');
-  $('#theme').onclick = () => {
-    const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.dataset.theme = dark ? 'light' : 'dark'; store.set('theme', document.documentElement.dataset.theme);
-  };
+  $('#topnav').innerHTML = PAGES.map(p => `<a href="#${p.id}" class="${cur === p.id ? 'active' : ''} ${d[p.id] ? 'done' : ''}">${p.n != null ? (d[p.id] ? '✓ ' : p.n + ' · ') : ''}${p.t}</a>`).join('');
+  const a = $('#topnav a.active'); a && a.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+$('#theme').onclick = () => {
+  const dark = document.documentElement.dataset.theme ? document.documentElement.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'light' : 'dark'; store.set('theme', document.documentElement.dataset.theme);
+};
+/* Wraps each page's first h1 + lead into the centred hero with a black eyebrow pill. */
+function hero(id) {
+  const h = $('#app h1'); if (!h) return;
+  const p = PAGES.find(x => x.id === id), lead = h.nextElementSibling && h.nextElementSibling.matches('p.lead') ? h.nextElementSibling : null;
+  const eyebrow = id === 'home' ? 'Mesa School of Business · FMV · DCF exam' : p.n != null ? `Sprint ${String(p.n).padStart(2, '0')} of 06 · ${p.g}` : p.g;
+  const box = document.createElement('header'); box.className = 'hero';
+  box.innerHTML = `<div class="pill-dark">${eyebrow}</div><div class="byline">Built on <b>Cool Nomad</b> · exam <b>29 Oct, 4:00 PM</b> · Delta Classroom</div>`;
+  h.replaceWith(box); box.append(h); lead && box.append(lead);
 }
 function footer(id) {
   const i = PAGES.findIndex(p => p.id === id), prev = PAGES[i - 1], next = PAGES[i + 1], d = done();
@@ -355,7 +357,9 @@ R.home = () => {
     <li><b>Mock exam</b> (timed): Wanderly, no hints, scored out of 50.</li>
     <li>Print the <b>cheat sheet</b>.</li>
   </ol></div>
-  <div class="next"><span></span><a class="btn primary" href="#s0">Start Sprint 0 →</a></div>`;
+  <h2>What is in this guide</h2>
+  <div class="index">${PAGES.filter(p => p.id !== 'home').map(p => `<a href="#${p.id}" class="${p.id === 'test' ? 'act' : ''}"><span class="n">${p.n != null ? 'S' + String(p.n).padStart(2, '0') : p.icon}</span><span class="t">${p.t}</span><span class="tag ${d[p.id] ? 'ok' : ''}">${d[p.id] ? 'Done' : p.g === 'Sprints' ? 'Learn' : p.id === 'cheat' ? 'Print' : 'Exam'}</span><span class="ar">→</span></a>`).join('')}</div>
+  <section class="outro"><h2>Seven sprints. One model. Fifty marks.</h2><p>Start at Sprint 0 and drill every cell until it turns green.</p><a class="btn primary" href="#s0">Start Sprint 0 →</a></section>`;
 };
 
 /* Sprint 0 */
@@ -739,6 +743,8 @@ function render() {
   const page = R[id] ? id : 'home';
   nav();
   $('#app').innerHTML = R[page]();
+  $('#app').className = page;
+  hero(page);
   R[page].after && R[page].after();
   bindFooter(page);
   window.scrollTo(0, 0);
