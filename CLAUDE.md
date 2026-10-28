@@ -1,0 +1,30 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+"DCF Sprint" is a static exam-prep website for a Financial Modelling & Valuations exam on discounted cash flow (DCF) valuation. It teaches from zero using the class "Cool Nomad" case: learning sprints, then a practice test and a timed mock exam that use the same model structure with different numbers.
+
+## Commands
+
+No build step and no dependencies. Plain HTML/CSS/JS.
+
+- Run locally: `python3 -m http.server 4173` (or the `site` config in `.claude/launch.json`). Open over HTTP, not `file://`, because `index.html` loads `model.js` and `app.js` as separate scripts.
+- Check the model maths from the CLI: `node -e "const D=require('./model.js'); console.log(D.run(D.CASES.coolnomad).v.equity)"` should print ≈ 220.9, matching the professor's completed Excel.
+- Deploy: `npx vercel --prod` from the repo root. Vercel serves the static files as-is; `.vercelignore` excludes `.claude/`.
+
+## Architecture
+
+- `model.js`: the pure valuation engine (works in Node and the browser via `window.DCF`). `run(case)` reproduces the class Google Sheet line by line: Offline P&L → D2C P&L → Consolidated (EBITDA, depreciation incl. capex ÷ life from the capex year, interest = debt × rate, tax = MAX(0, PBT × t)) → FCFE (PAT + dep − ΔWC − capex) → terminal value, discount factors, equity value, EV (+debt − cash), NPV vs the founder's ask, IRR, scenarios, sensitivity. `CASES` holds `coolnomad` (teaching), `practice` (TrekLite) and `test` (Wanderly). All three share one schema, so any page can render any case.
+- `app.js`: hash-routed single-page app. `PAGES` defines the nav; `R.<id>()` returns page HTML and `R.<id>.after()` binds widgets. Key pieces:
+  - Sheet renderer (`sheetHTML`/`mountSheet`) with Values / Formulas / Drill modes. Row specs (`OFF_SPEC`, `D2C_SPEC`, `conSpec`, `dcfDef`) carry the exact Google Sheets formulas and cell references from the class file (forecast sheets use columns F–I for FY27–FY30; the Assumptions sheet uses C–F; the DCF sheet uses C–F).
+  - `QS`: the 25 × 2-mark exam questions, each with a getter on the model output and a hint. Used by both practice and mock exam.
+  - `close()`: answer tolerance (±0.5% or 0.15 cr; 0.3 pp for IRR; 0.002 for discount factors).
+  - Progress, practice answers and mock-exam state are kept in `localStorage` (prefix `dcf:`).
+
+## Content rules
+
+- Teach only what was covered in class (FCFE DCF, terminal value, NPV, IRR, EV, scenarios). Other methods stay in the brief "Extras" sprint.
+- The answer key follows the professor's completed Excel, including offline packaging at 1.0% in FY28 (the case HTML says 1.2%).
+- If you change a case's numbers, re-check that values stay sensible (positive equity value, r > g) and that the asks give interesting NPV/IRR outcomes.

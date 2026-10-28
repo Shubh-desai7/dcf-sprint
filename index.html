@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DCF Sprint</title>
+<meta name="description" content="Learn discounted cash flow valuation from zero and get ready for the Financial Modelling & Valuations exam, using the Cool Nomad case.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f6f2;--panel:#ffffff;--ink:#1b1d22;--muted:#5f6470;--line:#e3e1da;
+  --accent:#2f5d50;--accent-soft:#e3eee9;--warn:#9a5b00;--warn-soft:#fbf0dc;
+  --good:#1f7a4a;--good-soft:#e2f3e8;--bad:#b3261e;--bad-soft:#fbe6e4;
+  --input:#fff7cc;--code:#f0efe9;--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14161a;--panel:#1c1f25;--ink:#e8e9ec;--muted:#9aa0ab;--line:#2c3038;
+  --accent:#7cc4ad;--accent-soft:#1f302b;--warn:#f0b75a;--warn-soft:#33291a;
+  --good:#6fd39c;--good-soft:#1b2e23;--bad:#ff8a80;--bad-soft:#3a1f1d;
+  --input:#3a3416;--code:#24282f;--shadow:none;}}
+:root[data-theme="dark"]{
+  --bg:#14161a;--panel:#1c1f25;--ink:#e8e9ec;--muted:#9aa0ab;--line:#2c3038;
+  --accent:#7cc4ad;--accent-soft:#1f302b;--warn:#f0b75a;--warn-soft:#33291a;
+  --good:#6fd39c;--good-soft:#1b2e23;--bad:#ff8a80;--bad-soft:#3a1f1d;
+  --input:#3a3416;--code:#24282f;--shadow:none;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Inter,system-ui,sans-serif}
+a{color:var(--accent)}
+code,.mono{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.86em}
+code{background:var(--code);padding:1px 6px;border-radius:5px;white-space:nowrap}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+nav.side{position:sticky;top:0;height:100vh;overflow:auto;border-right:1px solid var(--line);padding:20px 14px;background:var(--panel)}
+.brand{font-weight:700;font-size:18px;margin:0 8px 4px}
+.brand-sub{color:var(--muted);font-size:13px;margin:0 8px 16px}
+nav.side a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--ink);font-size:14.5px}
+nav.side a:hover{background:var(--code)}
+nav.side a.active{background:var(--accent-soft);color:var(--accent);font-weight:600}
+nav.side .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 10px 4px}
+.dot{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none;color:var(--muted)}
+.dot.done{background:var(--good);border-color:var(--good);color:#fff}
+main{padding:32px 40px 80px;max-width:980px;width:100%}
+h1{font-size:30px;line-height:1.25;margin:0 0 8px}
+h2{font-size:22px;margin:36px 0 10px}
+h3{font-size:17px;margin:24px 0 8px}
+.lead{color:var(--muted);font-size:17px;margin:0 0 20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:16px 0;box-shadow:var(--shadow)}
+.callout{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:8px;margin:14px 0}
+.callout.warn{border-color:var(--warn);background:var(--warn-soft)}
+.callout.bad{border-color:var(--bad);background:var(--bad-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat b{display:block;font-size:22px}
+.stat span{color:var(--muted);font-size:13px}
+.tablewrap{overflow-x:auto;margin:10px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,td.rn+td,th.rn+th{text-align:left}
+thead th{background:var(--code);font-weight:600;font-size:13px}
+tr.sub td{font-weight:600}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--code)}
+tr.sel td{background:var(--accent-soft)!important}
+td.rn,th.rn{color:var(--muted);font-size:12px;width:34px;text-align:center}
+td.in{background:var(--input)}
+td.f{font-family:"JetBrains Mono",monospace;font-size:12px;text-align:left;color:var(--accent)}
+td input{width:76px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font:inherit;text-align:right}
+td input.ok,input.ok{border-color:var(--good);background:var(--good-soft)}
+td input.no,input.no{border-color:var(--bad);background:var(--bad-soft)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+button,.btn{font:inherit;font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--panel);border-color:var(--accent);font-weight:600}
+button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+label.f{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+label.f input,select{font:inherit;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%}
+.inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:10px 0}
+.explain{min-height:64px}
+.quiz .q{margin:14px 0 6px;font-weight:600}
+.quiz .opt{display:block;width:100%;text-align:left;margin:6px 0}
+.quiz .opt.right{border-color:var(--good);background:var(--good-soft)}
+.quiz .opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.fb{font-size:14px;color:var(--muted);margin:4px 0 0}
+.qrow{display:grid;grid-template-columns:34px 1fr 120px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.qrow:last-child{border-bottom:0}
+.qrow .num{color:var(--muted);font-size:13px}
+.qrow input{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;text-align:right}
+.qrow .acts{display:flex;gap:6px}
+.qrow .hint{grid-column:2/-1;font-size:13.5px;color:var(--muted)}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--code);color:var(--muted)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.progress{height:8px;background:var(--code);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--accent)}
+.next{display:flex;justify-content:space-between;margin-top:40px;gap:10px}
+.timer{font-family:"JetBrains Mono",monospace;font-size:20px;font-weight:600}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px}
+.flow span{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.flow em{color:var(--muted);font-style:normal}
+.topnav{display:none}
+.themebtn{margin:16px 8px 0;font-size:13px}
+ul.tight li{margin:4px 0}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.side{display:none}
+  .topnav{display:flex;gap:6px;overflow-x:auto;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+  .topnav a{flex:none;font-size:13px;padding:6px 10px;border-radius:99px;border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+  .topnav a.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  main{padding:20px 16px 60px}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .qrow{grid-template-columns:28px 1fr}
+  .qrow input{grid-column:2}
+  .qrow .acts{grid-column:2}
+  h1{font-size:25px}
+}
+@media print{
+  nav.side,.topnav,.toolbar,.next,button{display:none!important}
+  .layout{display:block} main{padding:0;max-width:none}
+  body{background:#fff;color:#000;font-size:12px}
+  .card{box-shadow:none;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="side" id="side"></nav>
+  <div>
+    <div class="topnav" id="topnav"></div>
+    <main id="app"></main>
+  </div>
+</div>
+<script src="model.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
